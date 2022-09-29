@@ -1,69 +1,70 @@
 const mysql = require('mysql');
 const express = require('express');
-const session = require('express-session');  
+const session = require('express-session');
 const path = require('path');
 
-const connection = mysql.createConnection({  //default database connection
-    host     : 'localhost',
+const connection = mysql.createConnection({
+	host     : '127.0.0.1',
 	user     : 'root',
 	password : '',
-	database : 'nodelogin',
-})
-connection.connect(function(err) {
-    if (err) throw err;
-    console.log("Connected!"); //check if connection is successful
+	database : 'nodelogin'
 });
 
-const app = express(); //initializes express
+const app = express();
 
-app.use(session({           //express module configuration
+app.use(session({
 	secret: 'secret',
 	resave: true,
 	saveUninitialized: true
 }));
-app.use(express.json());  //express json extracts data from the html page
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'static')));
 
-
 app.get('/', function(request, response) {
-    response.sendFile(path.join(__dirname, '/login.html'));     //declare the login route
-})
+	// Render login template
+	response.sendFile(path.join(__dirname + '/login.html'));
+});
 
+// http://localhost:3000/auth
 app.post('/auth', function(request, response) {
-    //capture the input fields
-    let username = request.body.username;
-    let password = request.body.password;
-
-    if(username && password) {
-        connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], function(error, results, fields){
-            if (error) {
-                throw error;
-            }
-            //if account exists
-            if(results.length > 0) {
-                request.session.loggedIn = true;
-                request.session.username = username;
-                //return to home page is auth is successful
-                response.redirect('/home');
-            }
-            else{
-                response.send("Incorrect username or password.");
-            }
-            response.end();
-        })
-    }
-    else {
+	// Capture the input fields
+	let username = request.body.username;
+	let password = request.body.password;
+	// Ensure the input fields exists and are not empty
+	if (username && password) {
+		// Execute SQL query that'll select the account from the database based on the specified username and password
+		connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], function(error, results, fields) {
+			// If there is an issue with the query, output the error
+			if (error) throw error;
+			// If the account exists
+			if (results.length > 0) {
+				// Authenticate the user
+				request.session.loggedin = true;
+				request.session.username = username;
+				// Redirect to home page
+				response.redirect('/home');
+			} else {
+				response.send('Incorrect Username and/or Password!');
+			}			
+			response.end();
+		});
+	} else {
 		response.send('Please enter Username and Password!');
 		response.end();
 	}
-    
-    app.get('/home', function(req, res){
-        if(request.session.loggedIn){
-            response.send("Welcome back, " + req.session.username + "!");
-        }  
-        else{
-            response.send("Please log in before viewing this page.")
-        }
-    })
-})
+});
+
+// http://localhost:3000/home
+app.get('/home', function(request, response) {
+	// If the user is loggedin
+	if (request.session.loggedin) {
+		// Output username
+		response.send('Welcome back, ' + request.session.username + '!');
+	} else {
+		// Not logged in
+		response.send('Please login to view this page!');
+	}
+	response.end();
+});
+
