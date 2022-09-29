@@ -26,4 +26,21 @@ app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname, '/login.html'));     //declare the login route
 })
 
+app.post('/auth', function(request, response) {
+    //capture the input fields
+    let username = request.body.username;
+    let password = request.body.password;
 
+    if(username && password) {
+        connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], function(error, results, fields){
+            if (error) {
+                throw error;
+            }
+            //if account exists
+            if(results.length > 0) {
+                request.session.loggedIn = true;
+                request.session.username = username;
+            }
+        })
+    }
+})
