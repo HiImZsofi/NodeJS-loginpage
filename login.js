@@ -9,6 +9,10 @@ const connection = mysql.createConnection({  //default database connection
 	password : '',
 	database : 'nodelogin',
 })
+connection.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected!"); //check if connection is successful
+});
 
 const app = express(); //initializes express
 
@@ -53,4 +57,13 @@ app.post('/auth', function(request, response) {
 		response.send('Please enter Username and Password!');
 		response.end();
 	}
+    
+    app.get('/home', function(req, res){
+        if(request.session.loggedIn){
+            response.send("Welcome back, " + req.session.username + "!");
+        }  
+        else{
+            response.send("Please log in before viewing this page.")
+        }
+    })
 })
