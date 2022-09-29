@@ -46,6 +46,11 @@ app.post('/auth', function(request, response) {
             else{
                 response.send("Incorrect username or password.");
             }
+            response.end();
         })
     }
+    else {
+		response.send('Please enter Username and Password!');
+		response.end();
+	}
 })
