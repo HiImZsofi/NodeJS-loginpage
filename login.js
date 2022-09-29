@@ -40,6 +40,11 @@ app.post('/auth', function(request, response) {
             if(results.length > 0) {
                 request.session.loggedIn = true;
                 request.session.username = username;
+                //return to home page is auth is successful
+                response.redirect('/home');
+            }
+            else{
+                response.send("Incorrect username or password.");
             }
         })
     }
